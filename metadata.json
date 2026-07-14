@@ -1,0 +1,6 @@
+{
+  "name": "Fixagram",
+  "description": "A social feed for makers, fixers, and DIY enthusiasts.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
