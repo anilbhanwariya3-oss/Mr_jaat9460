@@ -37,12 +37,20 @@ export default function ImageEditor({ onCancel, onSave }: { onCancel: () => void
 
   const onSelectFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      setCrop(undefined) // Makes crop preview update between images.
+      const file = e.target.files[0];
+      setCrop(undefined); // Makes crop preview update between images.
+      
+      if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+        const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="800" viewBox="0 0 24 24" fill="#f87171" stroke="#ffffff" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 3v18"/><path d="M3 7.5h4"/><path d="M3 12h4"/><path d="M3 16.5h4"/><path d="M11 9h6"/><path d="M11 15h6"/></svg>`;
+        setImgSrc(`data:image/svg+xml;base64,${btoa(svg)}`);
+        return;
+      }
+      
       const reader = new FileReader()
       reader.addEventListener('load', () =>
         setImgSrc(reader.result?.toString() || ''),
       )
-      reader.readAsDataURL(e.target.files[0])
+      reader.readAsDataURL(file)
     }
   }
 
@@ -130,8 +138,8 @@ export default function ImageEditor({ onCancel, onSave }: { onCancel: () => void
       <div className="h-full flex flex-col items-center justify-center bg-gray-50 p-6">
         <label className="w-full max-w-sm flex flex-col items-center justify-center px-4 py-12 bg-white text-red-500 rounded-lg shadow-sm tracking-wide uppercase border border-pink-200 cursor-pointer hover:bg-red-50 hover:text-pink-500 transition-colors">
           <Upload className="w-10 h-10 mb-3" />
-          <span className="text-base leading-normal font-semibold">Select a photo</span>
-          <input type='file' className="hidden" accept="image/*" onChange={onSelectFile} />
+          <span className="text-base leading-normal font-semibold">Select a photo or file</span>
+          <input type='file' className="hidden" accept=".jpg,.jpeg,.png,.pdf" onChange={onSelectFile} />
         </label>
         <button onClick={onCancel} className="mt-6 text-gray-500 font-medium">Cancel</button>
       </div>
