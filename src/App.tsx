@@ -1,8 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Heart, MessageCircle, Send, Bookmark, Home, Search, PlusSquare, Video, User, MoreHorizontal, Wrench, Plus, BadgeCheck, Earth, UserPlus, Music, Play, Pause, SkipBack, SkipForward, Twitter, Volume2, VolumeX, Menu } from 'lucide-react';
-import { stories, posts as initialPosts } from './data';
+import { Heart, MessageCircle, Send, Bookmark, Home, Search, PlusSquare, Video, User, MoreHorizontal, Wrench, Plus, BadgeCheck, Earth, UserPlus, Music, Play, Pause, SkipBack, SkipForward, Twitter, Volume2, VolumeX, Menu, Facebook, Instagram, Youtube, Linkedin, Github, Globe } from 'lucide-react';
+import { stories, posts as initialPosts, activities, mockMessages } from './data';
 import ImageEditor from './ImageEditor';
 import SettingsScreen from './Settings';
+import SocialAccountFinder from './SocialAccountFinder';
+import EditProfileModal from './EditProfileModal';
+import ChatScreen from './ChatScreen';
+import ProfileScreen from './ProfileScreen';
+
+import AuthScreen from './AuthScreen';
 
 function VerifiedBadge({ type, className = '' }: { type?: boolean | string, className?: string }) {
   if (!type) return null;
@@ -347,11 +353,32 @@ function TwitterFeed() {
 
 export default function App() {
   const [showSplash, setShowSplash] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentView, setCurrentView] = useState<'feed' | 'new-post' | 'profile' | 'messages' | 'people' | 'music' | 'search' | 'reels' | 'activity' | 'x-feed' | 'settings'>('feed');
   const [feedPosts, setFeedPosts] = useState(initialPosts);
+  const [discoverPeople, setDiscoverPeople] = useState<any[]>(stories);
   const [toast, setToast] = useState<string | null>(null);
   const [showEditProfile, setShowEditProfile] = useState(false);
-  const [profileData, setProfileData] = useState({ name: 'mr_jaat9460', bio: 'Living my best life 🚀' });
+  const [activeChatUser, setActiveChatUser] = useState<any>(null);
+  const [activeProfileUser, setActiveProfileUser] = useState<any>(null);
+  const [profileData, setProfileData] = useState({ username: 'mr_jaat9460', name: 'mr_jaat9460', bio: 'Living my best life 🚀', link: '', avatar: '/dp.png', followers: 154200, following: 2430 });
+  const [profileTab, setProfileTab] = useState<'posts' | 'reels' | 'tagged' | 'saved'>('posts');
+
+  useEffect(() => {
+    try {
+      const storedUsers = localStorage.getItem('fixagram_users');
+      if (storedUsers) {
+        const parsed = JSON.parse(storedUsers);
+        const mapped = parsed.map((u: any) => ({
+          id: `local-${u.username}`,
+          user: u.username,
+          avatar: u.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${u.username}`,
+          verified: true
+        }));
+        setDiscoverPeople([...mapped, ...stories]);
+      }
+    } catch (e) {}
+  }, [isAuthenticated, showSplash]);
 
   const [reels, setReels] = useState(INITIAL_REELS);
   const [activeCommentsReelId, setActiveCommentsReelId] = useState<number | null>(null);
@@ -414,20 +441,56 @@ export default function App() {
   if (showSplash) {
     return (
       <div className="min-h-screen bg-gray-50 flex justify-center">
-        <div className="w-full max-w-md bg-white min-h-screen flex flex-col items-center justify-center relative">
-          <svg width="0" height="0" className="absolute">
-            <linearGradient id="splashGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop stopColor="#ef4444" offset="50%" />
-              <stop stopColor="#ec4899" offset="50%" />
-            </linearGradient>
-          </svg>
-          <div className="mb-4 relative rounded-full bg-blue-500 flex items-center justify-center w-24 h-24 shadow-lg overflow-hidden animate-spin" style={{ animationDuration: '4s' }}>
-            <Earth className="w-28 h-28 text-green-400 absolute" style={{ top: '-10%', left: '-10%' }} />
+        <div className="w-full max-w-md bg-white min-h-screen flex flex-col items-center justify-center relative overflow-hidden">
+          <style>{`
+            @keyframes run-tiger {
+              0% { transform: translateX(-150px) translateY(0) rotate(0deg); }
+              25% { transform: translateX(-75px) translateY(-10px) rotate(5deg); }
+              50% { transform: translateX(0px) translateY(0) rotate(0deg); }
+              75% { transform: translateX(75px) translateY(-10px) rotate(-5deg); }
+              100% { transform: translateX(150px) translateY(0) rotate(0deg); }
+            }
+          `}</style>
+          <div className="mb-4 relative flex items-center justify-center w-32 h-32 overflow-hidden">
+            <div className="text-7xl" style={{ animation: 'run-tiger 1s infinite linear alternate' }}>
+              🐅
+            </div>
           </div>
           <h1 className="text-4xl font-bold tracking-tight text-transparent bg-clip-text" style={{ fontFamily: "'Playfair Display', ui-serif, serif", backgroundImage: "linear-gradient(to right, #ef4444 50%, #ec4899 50%)" }}>Fixagram</h1>
           <p className="text-gray-600 font-medium mt-2">Welcome to Fixagram</p>
         </div>
       </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <AuthScreen 
+        onLogin={(data) => {
+          setProfileData({ ...profileData, ...data });
+          setIsAuthenticated(true);
+          
+          // Save to all registered users list so everyone can see
+          try {
+            const existingUsersStr = localStorage.getItem('fixagram_users');
+            let users = [];
+            if (existingUsersStr) {
+              users = JSON.parse(existingUsersStr);
+            }
+            if (!users.find((u: any) => u.username === data.username)) {
+              users.push({
+                username: data.username,
+                name: data.name,
+                avatar: data.avatar || `/dp.png`,
+                followers: 0
+              });
+              localStorage.setItem('fixagram_users', JSON.stringify(users));
+            }
+          } catch (e) {
+            console.error(e);
+          }
+        }} 
+      />
     );
   }
 
@@ -454,8 +517,14 @@ export default function App() {
                   <h1 className="text-2xl font-bold tracking-tight text-gray-900" style={{ fontFamily: "'Playfair Display', ui-serif, serif" }}>Fixagram</h1>
                 </div>
                 <div className="flex gap-4 items-center">
-                  <Heart className="w-6 h-6 text-gray-900 cursor-pointer" onClick={() => setCurrentView('activity')} />
-                  <MessageCircle className={`w-6 h-6 cursor-pointer text-gray-900`} onClick={() => setCurrentView('messages')} />
+                  <div className="relative cursor-pointer" onClick={() => setCurrentView('activity')}>
+                    <Heart className="w-6 h-6 text-gray-900" />
+                    <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></div>
+                  </div>
+                  <div className="relative cursor-pointer" onClick={() => setCurrentView('messages')}>
+                    <MessageCircle className="w-6 h-6 text-gray-900" />
+                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-white flex items-center justify-center text-[8px] text-white font-bold">1</div>
+                  </div>
                 </div>
               </header>
             )}
@@ -479,7 +548,7 @@ export default function App() {
                       </div>
                     </div>
                     {/* Other Stories */}
-                    {stories.map(story => (
+                    {discoverPeople.map(story => (
                       <div key={story.id} className="flex flex-col items-center gap-1 shrink-0 cursor-pointer">
                         <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-yellow-400 via-red-500 to-fuchsia-600 p-[2px]">
                           <div className="bg-white p-0.5 rounded-full w-full h-full">
@@ -500,88 +569,58 @@ export default function App() {
                   {/* Feed */}
                   <div className="flex flex-col pb-16">
                     {feedPosts.map(post => (
-                      <Post key={post.id} post={post} onAction={showToastMessage} />
+                      <Post 
+                        key={post.id} 
+                        post={post} 
+                        onAction={showToastMessage} 
+                        onViewProfile={(user) => { setActiveProfileUser(user); setCurrentView('profile'); }}
+                      />
                     ))}
                   </div>
                 </>
               )}
-
               {currentView === 'profile' && (
-                <div className="flex flex-col bg-white min-h-full">
-                  <div className="flex justify-between items-center p-4">
-                    <span className="font-bold text-lg flex items-center gap-1">mr_jaat9460</span>
-                    <div className="flex gap-4">
-                      <PlusSquare className="w-6 h-6 text-gray-900 cursor-pointer" onClick={() => setCurrentView('new-post')} />
-                      <Menu className="w-6 h-6 text-gray-900 cursor-pointer" onClick={() => setCurrentView('settings')} />
-                    </div>
-                  </div>
-                  
-                  <div className="flex px-4 py-2 items-center justify-between">
-                    <div className="w-20 h-20 rounded-full border border-gray-300 p-0.5">
-                      <img src="/dp.png" alt="Profile" className="w-full h-full rounded-full object-cover" />
-                    </div>
-                    <div className="flex gap-6 text-center">
-                      <div className="flex flex-col">
-                        <span className="font-semibold text-lg">14</span>
-                        <span className="text-sm text-gray-600">posts</span>
-                      </div>
-                      <div className="flex flex-col cursor-pointer">
-                        <span className="font-semibold text-lg">{formatNumber(154200)}</span>
-                        <span className="text-sm text-gray-600">followers</span>
-                      </div>
-                      <div className="flex flex-col cursor-pointer">
-                        <span className="font-semibold text-lg">{formatNumber(2430)}</span>
-                        <span className="text-sm text-gray-600">following</span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="px-4 py-2">
-                    <span className="font-semibold block text-sm">{profileData.name}</span>
-                    <span className="text-sm text-gray-600 block mb-3">{profileData.bio}</span>
-                    <div className="flex gap-2">
-                      <button onClick={() => setShowEditProfile(true)} className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-900 font-semibold py-1.5 px-4 rounded-lg text-sm transition-colors">Edit Profile</button>
-                      <button onClick={() => showToastMessage("Profile link copied!")} className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-900 font-semibold py-1.5 px-4 rounded-lg text-sm transition-colors">Share Profile</button>
-                    </div>
-                  </div>
-
-                  {/* Grid */}
-                  <div className="flex border-t border-gray-200 mt-2">
-                    <div className="flex-1 flex justify-center py-3 border-b-2 border-gray-900">
-                      <div className="grid grid-cols-3 gap-0.5 w-4 h-4">
-                        {[...Array(9)].map((_, i) => <div key={i} className="bg-gray-900" />)}
-                      </div>
-                    </div>
-                    <div className="flex-1 flex justify-center py-3">
-                      <Video className="w-5 h-5 text-gray-400" />
-                    </div>
-                    <div className="flex-1 flex justify-center py-3">
-                      <User className="w-5 h-5 text-gray-400" />
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-3 gap-0.5">
-                    {feedPosts.slice(0, 6).map(post => (
-                      <div key={post.id} className="aspect-square bg-gray-200">
-                        <img src={post.image} alt="post" className="w-full h-full object-cover" />
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                <ProfileScreen
+                  profileData={profileData}
+                  activeUser={activeProfileUser}
+                  onEdit={() => setShowEditProfile(true)}
+                  onShare={() => showToastMessage("Profile link copied!")}
+                  onNewPost={() => setCurrentView('new-post')}
+                  onSettings={() => setCurrentView('settings')}
+                  onMessage={(user) => { setActiveChatUser(user); setCurrentView('messages'); showToastMessage(`Started chat with ${user.user}`); }}
+                />
               )}
-
               {currentView === 'messages' && (
-                <div className="flex flex-col bg-white min-h-full">
-                  <div className="flex justify-between items-center p-4 border-b border-gray-100">
-                    <span className="font-bold text-lg">Messages</span>
-                  </div>
-                  <div className="flex-1 p-4 flex items-center justify-center text-gray-500 h-[60vh]">
-                    <div className="flex flex-col items-center gap-2">
-                      <MessageCircle className="w-12 h-12 text-gray-300" />
-                      <span>No messages yet</span>
+                activeChatUser ? (
+                  <ChatScreen user={activeChatUser} onBack={() => setActiveChatUser(null)} />
+                ) : (
+                  <div className="flex flex-col bg-white min-h-full">
+                    <div className="flex justify-between items-center p-4 border-b border-gray-100">
+                      <span className="font-bold text-lg">Messages</span>
+                    </div>
+                    <div className="flex-1 overflow-y-auto">
+                      {mockMessages.map((msg) => (
+                        <div key={msg.id} className="flex items-center gap-4 p-4 border-b border-gray-50 hover:bg-gray-50 cursor-pointer" onClick={() => setActiveChatUser(msg)}>
+                          <div className="w-14 h-14 rounded-full overflow-hidden flex-shrink-0 relative">
+                            <img src={msg.avatar} alt={msg.user} className="w-full h-full object-cover" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex justify-between items-baseline mb-1">
+                              <span className="font-semibold truncate">{msg.user}</span>
+                              <span className="text-xs text-gray-500 flex-shrink-0 ml-2">{msg.time}</span>
+                            </div>
+                            <p className={`text-sm truncate ${msg.unread ? 'font-semibold text-gray-900' : 'text-gray-500'}`}>
+                              {msg.lastMessage}
+                            </p>
+                          </div>
+                          {msg.unread && (
+                            <div className="w-2.5 h-2.5 bg-blue-500 rounded-full flex-shrink-0"></div>
+                          )}
+                        </div>
+                      ))}
                     </div>
                   </div>
-                </div>
+                )
               )}
 
               {currentView === 'people' && (
@@ -590,7 +629,7 @@ export default function App() {
                     <span className="font-bold text-lg">Discover People</span>
                   </div>
                   <div className="flex flex-col p-4 gap-4">
-                    {stories.map(person => (
+                    {discoverPeople.map(person => (
                       <div key={person.id} className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                           <img src={person.avatar} alt={person.user} className="w-12 h-12 rounded-full object-cover border border-gray-200" />
@@ -624,19 +663,10 @@ export default function App() {
 
               {currentView === 'search' && (
                 <div className="flex flex-col bg-white min-h-full">
-                  <div className="p-3">
-                    <div className="flex items-center bg-gray-100 rounded-lg p-2">
-                      <Search className="w-5 h-5 text-gray-400 mr-2" />
-                      <input type="text" placeholder="Search" className="bg-transparent border-none outline-none w-full text-sm" />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-3 gap-0.5">
-                    {feedPosts.map((post, i) => (
-                      <div key={i} className="aspect-square bg-gray-200">
-                        <img src={post.image} alt="search result" className="w-full h-full object-cover" />
-                      </div>
-                    ))}
-                  </div>
+                  <SocialAccountFinder 
+                    onMessage={(user) => { setActiveChatUser(user); setCurrentView('messages'); showToastMessage(`Started chat with ${user.user}`); }} 
+                    onViewProfile={(user) => { setActiveProfileUser(user); setCurrentView('profile'); }}
+                  />
                 </div>
               )}
 
@@ -676,7 +706,9 @@ export default function App() {
                                 <img src="/dp.png" alt="user" className="w-full h-full object-cover" />
                               </div>
                               <span className="font-semibold drop-shadow-md">{reel.username}</span>
-                              <button className="border border-white text-white text-xs px-2 py-1 rounded-md font-semibold ml-2 hover:bg-white/20 transition-colors">Follow</button>
+                              <div className="scale-75 origin-left ml-2">
+                                <ActivityFollowButton userId={reel.id} />
+                              </div>
                             </div>
                             <p className="text-sm line-clamp-2 drop-shadow-md mb-3">{reel.caption}</p>
                             
@@ -791,11 +823,29 @@ export default function App() {
                   <div className="flex justify-between items-center p-4 border-b border-gray-100">
                     <span className="font-bold text-lg">Activity</span>
                   </div>
-                  <div className="flex-1 p-4 flex items-center justify-center text-gray-500 h-[60vh]">
-                    <div className="flex flex-col items-center gap-2">
-                      <Heart className="w-12 h-12 text-gray-300" />
-                      <span>No new activity</span>
-                    </div>
+                  <div className="flex-1 overflow-y-auto">
+                    {activities.map((activity) => (
+                      <div key={activity.id} className="flex items-center gap-3 p-4 border-b border-gray-50">
+                        <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0">
+                          <img src={activity.avatar} alt={activity.user} className="w-full h-full object-cover" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm">
+                            <span className="font-semibold mr-1">{activity.user}</span>
+                            {activity.text}
+                          </p>
+                          <span className="text-xs text-gray-500">{activity.time}</span>
+                        </div>
+                        {activity.type === 'follow' && (
+                          <ActivityFollowButton userId={activity.id} />
+                        )}
+                        {activity.type !== 'follow' && (
+                           <div className="w-12 h-12 bg-gray-200 rounded flex-shrink-0 overflow-hidden">
+                              <img src="https://images.unsplash.com/photo-1581092160562-40aa08e78837?auto=format&fit=crop&w=150&q=80" alt="post thumbnail" className="w-full h-full object-cover" />
+                           </div>
+                        )}
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
@@ -836,35 +886,15 @@ export default function App() {
 
         {/* Edit Profile Modal */}
         {showEditProfile && (
-          <div className="absolute inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-xl w-full max-w-sm overflow-hidden flex flex-col">
-              <div className="flex justify-between items-center p-4 border-b border-gray-100">
-                <span className="font-bold">Edit Profile</span>
-                <button onClick={() => setShowEditProfile(false)} className="text-gray-500 font-bold">X</button>
-              </div>
-              <div className="p-4 flex flex-col gap-4">
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs text-gray-500 font-semibold">Name</label>
-                  <input 
-                    type="text" 
-                    value={profileData.name} 
-                    onChange={(e) => setProfileData({...profileData, name: e.target.value})}
-                    className="border-b border-gray-300 py-1 focus:outline-none focus:border-gray-900" 
-                  />
-                </div>
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs text-gray-500 font-semibold">Bio</label>
-                  <input 
-                    type="text" 
-                    value={profileData.bio} 
-                    onChange={(e) => setProfileData({...profileData, bio: e.target.value})}
-                    className="border-b border-gray-300 py-1 focus:outline-none focus:border-gray-900" 
-                  />
-                </div>
-                <button onClick={() => { setShowEditProfile(false); showToastMessage("Profile updated!"); }} className="mt-2 bg-blue-500 text-white py-2 rounded-lg font-semibold hover:bg-blue-600">Save Changes</button>
-              </div>
-            </div>
-          </div>
+          <EditProfileModal 
+            profileData={profileData} 
+            onClose={() => setShowEditProfile(false)} 
+            onSave={(data) => {
+              setProfileData(data);
+              setShowEditProfile(false);
+              showToastMessage("Profile updated!");
+            }} 
+          />
         )}
       </div>
     </div>
@@ -909,7 +939,25 @@ function ReelVideo({ reel, isMuted }: { reel: any, isMuted: boolean }) {
   );
 }
 
-function Post({ post, onAction }: { post: any; key?: React.Key | number | string, onAction?: (msg: string) => void }) {
+export function ActivityFollowButton({ userId, fullWidth }: { userId: number, fullWidth?: boolean }) {
+  const [isFollowing, setIsFollowing] = useState(false);
+  return (
+    <button 
+      onClick={() => setIsFollowing(!isFollowing)}
+      className={`btn-follow ${isFollowing ? 'following' : ''} ${fullWidth ? 'w-full' : ''}`}
+      onMouseEnter={(e) => {
+        if (isFollowing) e.currentTarget.textContent = 'Unfollow';
+      }}
+      onMouseLeave={(e) => {
+        if (isFollowing) e.currentTarget.textContent = 'Following';
+      }}
+    >
+      {isFollowing ? 'Following' : 'Follow'}
+    </button>
+  );
+}
+
+function Post({ post, onAction, onViewProfile }: { post: any; key?: React.Key | number | string, onAction?: (msg: string) => void, onViewProfile?: (user: any) => void }) {
   const [liked, setLiked] = useState(false);
   const [saved, setSaved] = useState(false);
   const [doubleClickAnimate, setDoubleClickAnimate] = useState(false);
@@ -925,7 +973,7 @@ function Post({ post, onAction }: { post: any; key?: React.Key | number | string
     <div className="border-b border-gray-100 pb-4">
       {/* Post Header */}
       <div className="flex justify-between items-center p-3">
-        <div className="flex items-center gap-3 cursor-pointer">
+        <div className="flex items-center gap-3 cursor-pointer" onClick={() => onViewProfile && onViewProfile(post)}>
           <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-yellow-400 to-fuchsia-600 p-[1.5px]">
             <img src={post.avatar} alt={post.user} className="w-full h-full rounded-full border border-white object-cover" />
           </div>

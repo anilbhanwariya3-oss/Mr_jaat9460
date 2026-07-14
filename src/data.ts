@@ -7,7 +7,20 @@ export const stories = [
   { id: 6, user: 'weld_it', avatar: 'https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?w=150&h=150&fit=crop', verified: 'singer' },
 ];
 
+export const activities = [
+  { id: 1, type: 'like', user: 'woodworker_dan', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop', text: 'liked your post.', time: '2h' },
+  { id: 2, type: 'comment', user: 'sarah_fixes', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop', text: 'commented: "Great job on this!"', time: '5h' },
+  { id: 3, type: 'follow', user: 'auto_mike', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop', text: 'started following you.', time: '1d' },
+];
+
+export const mockMessages = [
+  { id: 1, user: 'woodworker_dan', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop', lastMessage: 'Check out my new workbench.', time: '10m', unread: true },
+  { id: 2, user: 'sarah_fixes', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop', lastMessage: 'Are we still on for the collab?', time: '2h', unread: false },
+  { id: 3, user: 'diy_jenny', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop', lastMessage: 'Thanks for the tips!', time: '1d', unread: false },
+];
+
 export const posts = [
+
   {
     id: 1,
     user: 'sarah_fixes',

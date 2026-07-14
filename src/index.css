@@ -24,3 +24,37 @@
   0% { transform: translateX(100%); }
   100% { transform: translateX(-100%); }
 }
+
+/* Base Follow Button Styling */
+.btn-follow {
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 20px;
+  border: 1px solid #0095f6;
+  background-color: #0095f6;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-follow:hover {
+  background-color: #1877f2;
+}
+
+/* Active "Following" State Styling */
+.btn-follow.following {
+  background-color: transparent;
+  color: #000000;
+  border: 1px solid #dbdbdb;
+}
+
+.btn-follow.following:hover {
+  background-color: #efefef;
+  color: #ff3b30; /* Optional: turn red on hover to show "Unfollow" action */
+}
+
+.btn-follow:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
