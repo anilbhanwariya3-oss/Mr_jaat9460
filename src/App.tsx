@@ -114,6 +114,13 @@ export default function App() {
             <main className="flex-1 overflow-y-auto overflow-x-hidden no-scrollbar">
               {currentView === 'feed' && (
                 <>
+                  {/* Feed */}
+                  <div className="flex flex-col">
+                    {feedPosts.map(post => (
+                      <Post key={post.id} post={post} />
+                    ))}
+                  </div>
+
                   {/* Stories */}
                   <div className="flex gap-4 p-4 overflow-x-auto border-b border-gray-100 no-scrollbar">
                     {/* Add Story */}
@@ -145,13 +152,6 @@ export default function App() {
                           <span className="text-[10px] text-gray-500">2 days</span>
                         </div>
                       </div>
-                    ))}
-                  </div>
-
-                  {/* Feed */}
-                  <div className="flex flex-col">
-                    {feedPosts.map(post => (
-                      <Post key={post.id} post={post} />
                     ))}
                   </div>
                 </>
